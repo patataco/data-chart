@@ -3,11 +3,15 @@ import { Chart, getElementAtEvent } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   ChartData,
+  ChartOptions,
   ChartTypeRegistry,
   registerables,
   TooltipItem,
 } from 'chart.js';
 import { InteractionItem } from 'chart.js';
+import moment from 'moment';
+
+import 'chartjs-adapter-date-fns';
 
 import { useChartData } from '@/service/useChartData';
 import {
@@ -104,6 +108,7 @@ export function ChartComponent() {
         text: 'Data Chart',
       },
       tooltip: {
+        mode: 'index',
         callbacks: {
           beforeBody: (items: TooltipItem<keyof ChartTypeRegistry>[]) =>
             beforeBody(items, dataArr),
@@ -113,6 +118,20 @@ export function ChartComponent() {
       },
     },
     scales: {
+      x: {
+        type: 'time',
+        time: {
+          unit: 'minute',
+        },
+        ticks: {
+          callback: function (value: string | number, index: number) {
+            if (index === 0) {
+              return moment(value).format('YYYY년 MM월 DD일 HH:mm');
+            }
+            return moment(value).format('HH:mm');
+          },
+        },
+      },
       y: {
         type: 'linear' as const,
         position: 'left' as const,
@@ -173,7 +192,7 @@ export function ChartComponent() {
         type="bar"
         ref={chartRef}
         data={newChartData}
-        options={options}
+        options={options as ChartOptions}
         onClick={onClick}
       />
       <FilterButton

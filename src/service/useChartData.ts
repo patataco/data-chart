@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import { fetchData } from '@/service/index';
+import { formatDateForXAxis } from '@/utils/dateFormat';
 
 export interface DistrictData {
   id: string;
@@ -15,8 +16,14 @@ export const useChartData = () => {
     const entries = Object.entries(data).sort(([a], [z]) => {
       return new Date(a).getTime() - new Date(z).getTime();
     });
+    const convertedTime = entries
+      .map(([key]) => key)
+      .map((time) => {
+        return formatDateForXAxis(time);
+      });
+
     return {
-      labels: entries.map(([key]) => key),
+      labels: convertedTime,
       dataArr: entries.map(([, value]) => value),
     };
   };
