@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { fetchData } from '@/service/index';
 
-interface DistrictData {
+export interface DistrictData {
   id: string;
   value_area: number;
   value_bar: number;

@@ -1,6 +1,12 @@
 import React, { useMemo, useRef, useState } from 'react';
 import { Chart, getElementAtEvent } from 'react-chartjs-2';
-import { Chart as ChartJS, ChartData, registerables } from 'chart.js';
+import {
+  Chart as ChartJS,
+  ChartData,
+  ChartTypeRegistry,
+  registerables,
+  TooltipItem,
+} from 'chart.js';
 import { InteractionItem } from 'chart.js';
 
 import { useChartData } from '@/service/useChartData';
@@ -41,7 +47,7 @@ export function ChartComponent() {
       highlightColor: string,
       defaultColor: string
     ) => {
-      return data.map((value, index) => {
+      return data.map((_, index) => {
         return ids[index] === targetId ? highlightColor : defaultColor;
       });
     };
@@ -99,8 +105,10 @@ export function ChartComponent() {
       },
       tooltip: {
         callbacks: {
-          beforeBody: (items, data) => beforeBody(items, dataArr),
-          label: (context) => getLabels(context),
+          beforeBody: (items: TooltipItem<keyof ChartTypeRegistry>[]) =>
+            beforeBody(items, dataArr),
+          label: (context: TooltipItem<keyof ChartTypeRegistry>) =>
+            getLabels(context),
         },
       },
     },
@@ -145,7 +153,7 @@ export function ChartComponent() {
 
   const handleElementClick = (element: InteractionItem[]) => {
     if (!element.length) return;
-    console.log(element);
+
     const { index } = element[0];
     const clickedId = dataArr[index].id;
     setFilteredId(clickedId); // 클릭한 지역구 ID를 상태에 저장
