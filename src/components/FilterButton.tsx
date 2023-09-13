@@ -1,11 +1,31 @@
-const FilterButton = ({ ids, setFilteredId }) => {
+import { Dispatch, SetStateAction } from 'react';
+
+import Button from '@/components/Button';
+
+type FilterButtonProps = {
+  ids: string[];
+  setFilteredId: Dispatch<SetStateAction<string | null>>;
+  filteredId: string | null;
+};
+
+const FilterButton = ({
+  ids,
+  setFilteredId,
+  filteredId,
+}: FilterButtonProps) => {
   return (
-    <div>
-      <button onClick={() => setFilteredId(null)}>전체</button>
+    <div className="flex w-full justify-center gap-16">
+      <Button isActive={!filteredId} onClick={() => setFilteredId(null)}>
+        전체
+      </Button>
       {ids.map((id) => (
-        <button key={id} onClick={() => setFilteredId(id)}>
+        <Button
+          key={id}
+          onClick={() => setFilteredId(id)}
+          isActive={id === filteredId}
+        >
           {id}
-        </button>
+        </Button>
       ))}
     </div>
   );

@@ -1,17 +1,7 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Bar, getElementAtEvent } from 'react-chartjs-2';
-import {
-  BarElement,
-  CategoryScale,
-  Chart as ChartJS,
-  Filler,
-  Legend,
-  LinearScale,
-  LineElement,
-  PointElement,
-  Title,
-  Tooltip,
-} from 'chart.js';
+import React, { useMemo, useRef, useState } from 'react';
+import { Chart, getElementAtEvent } from 'react-chartjs-2';
+import { Chart as ChartJS, ChartData, registerables } from 'chart.js';
+import { InteractionItem } from 'chart.js';
 
 import { useChartData } from '@/service/useChartData';
 import {
@@ -21,27 +11,18 @@ import {
   LINE_COLOR,
   LINE_HIGHLIGHT_COLOR,
 } from '@/utils';
+import { beforeBody, getLabels } from '@/utils/tooltipCallbacks';
 
 import FilterButton from './FilterButton';
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  LineElement,
-  PointElement,
-  Title,
-  Tooltip,
-  Filler,
-  Legend
-);
+ChartJS.register(...registerables);
 
 export function ChartComponent() {
   const { labels, dataArr } = useChartData();
   const [filteredId, setFilteredId] = useState<string | null>(null);
   const chartRef = useRef<ChartJS>(null);
 
-  const newChartData = useMemo(() => {
+  const newChartData: ChartData = useMemo(() => {
     const { areaData, barData } = dataArr.reduce<{
       areaData: number[];
       barData: number[];
@@ -54,11 +35,11 @@ export function ChartComponent() {
       { areaData: [], barData: [] }
     );
     const getHighlightColors = (
-      data,
-      ids,
-      targetId,
-      highlightColor,
-      defaultColor
+      data: number[],
+      ids: string[],
+      targetId: string,
+      highlightColor: string,
+      defaultColor: string
     ) => {
       return data.map((value, index) => {
         return ids[index] === targetId ? highlightColor : defaultColor;
@@ -85,7 +66,7 @@ export function ChartComponent() {
                 LINE_HIGHLIGHT_COLOR,
                 LINE_BACKGROUND
               )
-            : LINE_BACKGROUND,
+            : Array(areaData.length).fill(LINE_BACKGROUND),
         },
         {
           label: 'value_bar',
@@ -100,7 +81,7 @@ export function ChartComponent() {
                 BAR_HIGHLIGHT_COLOR,
                 BAR_COLOR
               )
-            : BAR_COLOR,
+            : Array(barData.length).fill(BAR_COLOR),
         },
       ],
     };
@@ -114,17 +95,12 @@ export function ChartComponent() {
       },
       title: {
         display: true,
-        text: 'Chart.js Line Chart',
+        text: 'Data Chart',
       },
       tooltip: {
         callbacks: {
-          label: (context) => {
-            const label = context.dataset.label || '';
-            const value = context.parsed.y;
-            const districtId = dataArr ? dataArr[context.dataIndex].id : 'N/A';
-
-            return `${label}: ${value} (ID: ${districtId})`;
-          },
+          beforeBody: (items, data) => beforeBody(items, dataArr),
+          label: (context) => getLabels(context),
         },
       },
     },
@@ -132,12 +108,15 @@ export function ChartComponent() {
       y: {
         type: 'linear' as const,
         position: 'left' as const,
+        min: 0,
+        max: 200,
+        stepSize: 20,
         ticks: {
-          min: 0,
-          max: 100,
-          stepSize: 20,
-          callback: function (value, index, values) {
-            return Number(value) <= 100 ? value : null;
+          callback: function (tickValue: number | string) {
+            if (typeof tickValue === 'number' && tickValue < 101) {
+              return tickValue;
+            }
+            return '';
           },
         },
       },
@@ -147,36 +126,32 @@ export function ChartComponent() {
         grid: {
           drawOnChartArea: false,
         },
+        min: 1000,
+        max: 20000,
+        stepSize: 2000,
         ticks: {
-          min: 1000,
-          max: 20000,
-          stepSize: 2000,
-          callback: function (value, index, values) {
-            return Number(value) >= 1000 ? value : null;
+          callback: function (tickValue: number | string) {
+            if (typeof tickValue === 'number' && tickValue > 9999) {
+              return tickValue;
+            }
+            return '';
           },
         },
       },
     },
   };
 
-  useEffect(() => {
-    const chart = chartRef.current;
-    if (!chart) return;
-    chart.update();
-    chart.render();
-    console.log(newChartData);
-  }, [newChartData, filteredId]);
   const uniqueIds = Array.from(new Set(dataArr.map((data) => data.id)));
 
-  const handleElementClick = (element) => {
+  const handleElementClick = (element: InteractionItem[]) => {
     if (!element.length) return;
     console.log(element);
-    const { datasetIndex, index } = element[0];
+    const { index } = element[0];
     const clickedId = dataArr[index].id;
     setFilteredId(clickedId); // 클릭한 지역구 ID를 상태에 저장
   };
 
-  const onClick = (event) => {
+  const onClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
     const chart = chartRef.current;
     if (!chart) return;
 
@@ -185,20 +160,18 @@ export function ChartComponent() {
   };
 
   return (
-    <div>
-      <FilterButton ids={uniqueIds} setFilteredId={setFilteredId} />
-      <button
-        onClick={() => {
-          chartRef.current?.update();
-        }}
-      >
-        button
-      </button>
-      <Bar
+    <div className="mx-auto flex h-auto max-h-[1000px] w-full max-w-[1600px] flex-col gap-10 px-8">
+      <Chart
+        type="bar"
         ref={chartRef}
         data={newChartData}
         options={options}
         onClick={onClick}
+      />
+      <FilterButton
+        ids={uniqueIds}
+        setFilteredId={setFilteredId}
+        filteredId={filteredId}
       />
     </div>
   );
