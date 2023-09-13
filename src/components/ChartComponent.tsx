@@ -26,7 +26,7 @@ import FilterButton from './FilterButton';
 ChartJS.register(...registerables);
 
 export function ChartComponent() {
-  const { labels, dataArr } = useChartData();
+  const { labels, dataArr, isLoading } = useChartData();
   const [filteredId, setFilteredId] = useState<string | null>(null);
   const chartRef = useRef<ChartJS>(null);
 
@@ -67,18 +67,27 @@ export function ChartComponent() {
 
   return (
     <div className="mx-auto flex h-auto max-h-[1000px] w-full max-w-[1600px] flex-col gap-10 px-8">
-      <Chart
-        type="bar"
-        ref={chartRef}
-        data={newChartData}
-        options={options as ChartOptions}
-        onClick={onClick}
-      />
-      <FilterButton
-        ids={uniqueIds}
-        setFilteredId={setFilteredId}
-        filteredId={filteredId}
-      />
+      {isLoading ? (
+        <div className="flex items-center justify-center">
+          <span>로딩 중...</span>햐
+        </div>
+      ) : (
+        <>
+          <Chart
+            type="bar"
+            ref={chartRef}
+            data={newChartData}
+            options={options as ChartOptions}
+            onClick={onClick}
+          />
+
+          <FilterButton
+            ids={uniqueIds}
+            setFilteredId={setFilteredId}
+            filteredId={filteredId}
+          />
+        </>
+      )}
     </div>
   );
 }

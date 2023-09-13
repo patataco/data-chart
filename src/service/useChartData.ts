@@ -12,6 +12,7 @@ export type DistrictDataSet = Record<string, DistrictData>;
 
 export const useChartData = () => {
   const [data, setData] = useState<DistrictDataSet>();
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const parseData = (data: DistrictDataSet) => {
     const entries = Object.entries(data).sort(([a], [z]) => {
       return new Date(a).getTime() - new Date(z).getTime();
@@ -28,8 +29,14 @@ export const useChartData = () => {
     };
   };
   const fetchChartData = async () => {
-    const rawData = await fetchData();
-    setData(rawData);
+    try {
+      const rawData = await fetchData();
+      setData(rawData);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const { labels, dataArr } = useMemo(() => {
@@ -46,5 +53,5 @@ export const useChartData = () => {
     fetchChartData();
   }, []);
 
-  return { labels, dataArr };
+  return { labels, dataArr, isLoading };
 };
