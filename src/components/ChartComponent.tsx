@@ -69,7 +69,7 @@ export function ChartComponent() {
     <div className="mx-auto flex h-auto max-h-[1000px] w-full max-w-[1600px] flex-col gap-10 px-8">
       {isLoading ? (
         <div className="flex items-center justify-center">
-          <span>로딩 중...</span>햐
+          <span>로딩 중...</span>
         </div>
       ) : (
         <>
